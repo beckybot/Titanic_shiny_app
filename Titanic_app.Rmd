@@ -1,0 +1,86 @@
+---
+title: "Developing Data Products: Shiny App Assignment"
+author: "Becky Reimer"
+date: "12/15/2019"
+output: ioslides_presentation
+runtime: shiny
+fontsize: 4pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Interactive Plot with Shiny
+This presentation includes an interactive plot showing the survival rates of passengers on the Titanic, using the Titanic dataset that is included in R. It allows us to explore the question:
+Which types of passengers were most likely to survive the Titanic?
+
+## UI code
+The UI code for this application allows the user to select the types of passengers to include in the accompanying plot, based on age group (Adults vs. Children) and gender (Males vs. Females). 
+
+```{r ui, echo=FALSE, message=FALSE}
+library(shiny)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+data(Titanic)
+
+ui <- fluidPage(
+    sidebarLayout(                                 
+      sidebarPanel(
+        h3("Select Passenger Characteristics"),
+        checkboxGroupInput(inputId = "age_group",
+                           label = "Select age groups(s):",
+                           choices = c("Adult", "Child"),
+                           selected = c("Adult", "Child")),
+        checkboxGroupInput(inputId = "gender",
+                  label = "Select gender(s):",
+                  choices = c("Male", "Female"),
+                  selected = c("Male", "Female")),
+        submitButton("Submit")
+      ),
+      mainPanel(   
+        plotOutput("plot1"), h3("Total passengers in plot:"), 
+        textOutput("sum1")
+      ))
+)
+```
+
+## Server code
+The server portion of the code for this app takes the user-provided inputs for age group and gender and uses them to subset the Titanic data appropriately before doing some manipulations and calculating survival rates.
+
+The app then shows a plot of the survival rates for passengers in different classes (1st, 2nd, 3rd, and Crew) and displays the total number of passengers included in the plot. This plot updates based on the user input and allows us to view differences in survival rates. For example:
+
+Were women and children more likely to survive than men?
+
+```{r serv, echo=FALSE, message=FALSE}
+server <- function(input, output) {
+      titanic <- as.data.frame(Titanic)
+      titanic_subset <- reactive( {  
+          req(input$gender)
+          titanic0 <- subset(titanic, Sex %in% input$gender & Age %in% input$age_group) 
+          titanic1 <- group_by(titanic0, Class)
+          titanic2 <- summarize(titanic1, passengers = sum(Freq, na.rm=TRUE))
+          titanic_sub <- titanic1[(titanic1$Survived == "Yes"), ]
+          titanic_sub2 <- summarize(titanic_sub, surv_pass = sum(Freq, na.rm=TRUE))
+          titanic_rates <- arrange(join(titanic_sub2,titanic2),Class)
+          titanic_rates <- mutate(titanic_rates, surv_rate = surv_pass/passengers)
+      })
+      output$plot1 = renderPlot({  
+        ggplot(data=titanic_subset(), aes(x=Class, y=surv_rate, fill=passengers)) +
+          geom_bar(stat = "identity") + 
+          scale_y_continuous(labels = function(y) paste0(y*100, "%")) +
+          expand_limits(y=1) +  xlab("Passenger Class") + ylab("Survival Rate")
+      })
+      output$sum1 <- reactive({
+        sumData <- titanic[(titanic$Sex %in% input$gender &
+                            titanic$Age %in% input$age_group), ]
+        sum(sumData$Freq)
+      })
+}
+```
+
+## Survival Rates on the Titanic
+```{r, echo = FALSE}
+shinyApp(ui = ui, server = server)
+```
