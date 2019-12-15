@@ -15,6 +15,9 @@ knitr::opts_chunk$set(echo = FALSE)
 This presentation includes an interactive plot showing the survival rates of passengers on the Titanic, using the Titanic dataset that is included in R. It allows us to explore the question:
 Which types of passengers were most likely to survive the Titanic?
 
+The code for this app is on github here:
+https://github.com/beckybot/Titanic_shiny_app
+
 ## UI code
 The UI code for this application allows the user to select the types of passengers to include in the accompanying plot, based on age group (Adults vs. Children) and gender (Males vs. Females). 
 
@@ -49,7 +52,7 @@ ui <- fluidPage(
 ## Server code
 The server portion of the code for this app takes the user-provided inputs for age group and gender and uses them to subset the Titanic data appropriately before doing some manipulations and calculating survival rates.
 
-The app then shows a plot of the survival rates for passengers in different classes (1st, 2nd, 3rd, and Crew) and displays the total number of passengers included in the plot. This plot updates based on the user input and allows us to view differences in survival rates. For example:
+The app then shows a plot of the survival rates for passengers in different classes (1st, 2nd, 3rd, and Crew) and displays the total number of passengers included in the plot. This plot updates based on the user input and allows us to explore differences in survival rates. For example, we can use it to answer the question:
 
 Were women and children more likely to survive than men?
 
